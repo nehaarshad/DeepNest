@@ -2,10 +2,11 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useSessionStore } from "@/features/sessions/sessionstore"
 import { calculateDeepScore } from "@/features/stats/deepscore"
 import StatCard from "@/components/dashboard/deepscorecard"
-
+import logo from "../../public/favicon.png"
 export default function DashboardPage() {
   const { sessions, loadSessions } = useSessionStore()
 
@@ -24,9 +25,19 @@ export default function DashboardPage() {
   const pausedSessions = sessions.filter((s) => s.status === "abandoned")
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold">DeepNest Dashboard</h1>
+   <main className="min-h-screen bg-slate-950 text-white p-8">
+  <div className="max-w-5xl mx-auto space-y-8">
+    <div className="flex items-center gap-4">
+      <Image
+        src={logo}
+        alt="Dashboard Hero"
+        width={100}
+        height={50}
+        className="w-auto h-12 rounded-lg shadow-lg"
+      />
+      <h1 className="text-4xl font-bold">DeepNest Dashboard</h1>
+    </div>
+        
 
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4">

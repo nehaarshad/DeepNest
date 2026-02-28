@@ -35,16 +35,18 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       return newSession.id
   },
 
-  updateSession: (id,updates) => {
-    const updated = get().sessions.map((s) =>
-      s.id === id
-        ? ({ ...s, ...updates } )
-        : s
-    )
+ updateSession: (id, updates) => {
+  const sessions = get().sessions
+  const session = sessions.find(s => s.id === id)
+  if (session) {
+    Object.assign(session, updates) // modifies existing object
+  }
+  console.log("Updated session:", session)
+  console.log("All sessions after update:", sessions)
+  storage.saveSessions(sessions)
+  set({ sessions })
+},
 
-    storage.saveSessions(updated)
-    set({ sessions: updated })
-  },
 
   deleteSession: (id) => {
     const updated = get().sessions.filter((s) => s.id !== id)

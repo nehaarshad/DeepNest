@@ -3,6 +3,7 @@ import { calculateRemainingTime } from "./timerlogic"
 import { useSessionStore } from "../sessions/sessionstore"
 
 interface TimerState {
+  isSessionCompleteModalOpen: boolean
   duration: number
   startTime: number | null
   remaining: number
@@ -10,12 +11,14 @@ interface TimerState {
   runningSessionId: string | null
 
   start: (minutes: number) => void
+  continue: (minutes: number) => void
   pause: () => void
   reset: () => void
   tick: () => void
 }
 
 export const useTimerStore = create<TimerState>((set, get) => ({
+  isSessionCompleteModalOpen: false,
   duration: 0,
   startTime: null,
   remaining: 0,
@@ -25,6 +28,20 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   start: (minutes) => {
     const durationMs = minutes * 60 * 1000
     const sessionId = useSessionStore.getState().addSession(minutes, "abandoned")
+
+    set({
+      duration: durationMs,
+      startTime: Date.now(),
+      remaining: durationMs,
+      isRunning: true,
+      runningSessionId: sessionId
+    })
+  },
+
+   continue: (minutes) => {
+    const durationMs = minutes * 60 * 1000
+    const sessionId = get().runningSessionId 
+
 
     set({
       duration: durationMs,
@@ -78,18 +95,19 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         })
       }
 
+        if (typeof Audio !== "undefined") {
+    const audio = new Audio("/sound/win.mp3")
+    audio.play().catch(e => console.log("Audio play failed:", e))
+  }
+
       set({
+          isSessionCompleteModalOpen: true,
         remaining: 0,
         duration: 0,
         startTime: null,
         isRunning: false,
         runningSessionId: null
       })
-
-      if (Notification.permission === "granted") {
-        new Notification("Deep session complete 🌿")
-      }
-
       return
     }
 
