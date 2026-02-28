@@ -4,17 +4,17 @@ import { useEffect, useState } from "react"
 import { useTimerStore } from "@/features/timer/timerstore"
 import { formatTime } from "@/features/timer/timerlogic"
 import { useSearchParams } from "next/navigation"
-import {CompleteSessionDialogueBox} from "@/components/ui/modal"
+import {useCompleteSessionDialogue} from "@/components/ui/modal"
 import { useSessionStore } from "@/features/sessions/sessionstore"
 
 
 export default function SessionContent() {
-  const { remaining,duration,  isRunning, start, pause, reset, tick } = useTimerStore()
+  const { remaining,duration,  isRunning,isSessionCompleteModalOpen, continue: continueSession,start, pause, reset, tick } = useTimerStore()
 
   const [showModal, setShowModal] = useState(false)
   const [inputMinutes, setInputMinutes] = useState(25)
   const [paused, setPaused] = useState(false)
-    const modal = CompleteSessionDialogueBox()
+    const modal = useCompleteSessionDialogue()
 
 // inside the component
 const searchParams = useSearchParams()
@@ -25,27 +25,23 @@ useEffect(() => {
     const sessions = useSessionStore.getState().sessions
     const session = sessions.find((s) => s.id === continueId)
     if (session) {
-      start(session.duration) // or remaining duration
+      continueSession(session.remaining / 60 / 1000) // or remaining duration
     }
   }
-}, [continueId, start])
+}, [continueId, continueSession])
   // Timer interval
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isRunning) {
       interval = setInterval(() => {
         tick()
-        // Check if remaining just hit 0
-        if (remaining <= 0 && !modal.isOpen) {
-          modal.open("🎉 Focus Complete!")
-        }
+        
       }, 1000)
     }
     return () => interval && clearInterval(interval)
-  }, [isRunning, tick, remaining, modal])
+  }, [isRunning, tick, remaining,])
 
 
-  // When timer completes, show modal
   // Handle starting a new session
   const handleStart = () => {
     start(inputMinutes)
@@ -61,7 +57,7 @@ useEffect(() => {
 
   // Handle continue
   const handleContinue = () => {
-    start(remaining / 60 / 1000) // resume with remaining time
+    continueSession(remaining / 60 / 1000) // resume with remaining time
     setPaused(false)
   }
 
@@ -77,7 +73,7 @@ useEffect(() => {
               onClick={() => setShowModal(true)}
               className="bg-indigo-600  hover:bg-indigo-500 px-6 py-3 rounded-xl"
             >
-              Start Session
+              Start New Session
             </button>
           )}
 
@@ -105,12 +101,14 @@ useEffect(() => {
         </div>
 
         <div className="mt-10">
+              {!isRunning && !paused && duration === 0 && remaining === 0 && (
           <a
             href="/dashboard"
             className="bg-amber-600 hover:bg-amber-500 px-20 py-3 rounded-xl text-lg font-medium"
           >
             Cancel
           </a>
+              )}
         </div>
       </div>
 
@@ -143,18 +141,36 @@ useEffect(() => {
               </button>
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 bg-slate-700 rounded"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-              
-            </div>
-        </div>
+        </div>  
         
       )}
+       {/* Completion Modal - Add this JSX */}
+      {isSessionCompleteModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div className="bg-slate-800 p-8 rounded-2xl w-80 space-y-6 text-center shadow-xl">
+      <div className="text-5xl">🎉</div>
+      <h2 className="text-2xl font-bold">Focus Complete!</h2>
+      <p className="text-slate-400">Great work! Your session is done.</p>
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={() => {
+            useTimerStore.setState({ isSessionCompleteModalOpen: false })
+            setShowModal(true) // let them start a new one
+          }}
+          className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-medium"
+        >
+          Start Another
+        </button>
+        <a
+          href="/dashboard"
+          className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-medium"
+        >
+          Go to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+)}
       
     </main>
     

@@ -1,18 +1,24 @@
 import { create } from "zustand"
+import type { ComponentType } from "react"
 
 interface SessionCompleteModalState {
+  Component: ComponentType
   isOpen: boolean
   message: string
   open: (msg?: string) => void
   close: () => void
 }
 
-export const CompleteSessionDialogueBox = create<SessionCompleteModalState>((set) => ({
-  isOpen: false,
+export const useCompleteSessionDialogue = create<SessionCompleteModalState>((set) => ({
+  Component: () => null,
+  isOpen: false, // Start closed
   message: "🎉 Focus Complete!",
   open: (msg) => {
-    const audio = typeof Audio !== "undefined" ? new Audio("../public/sound/win.mp3") : null
-    if (audio) audio.play()
+    // Play sound
+    if (typeof Audio !== "undefined") {
+      const audio = new Audio("/sound/win.mp3") // Remove "../public" from path
+      audio.play().catch(e => console.log("Audio play failed:", e))
+    }
 
     set({
       isOpen: true,
