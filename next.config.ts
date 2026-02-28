@@ -3,6 +3,9 @@ import { NextConfig } from 'next';
 import withPWA from 'next-pwa';
 
 const nextConfig = {
+  turbopack: {
+    // ...
+  },
   reactStrictMode: true,
  // swcMinify: true,
   // other Next.js configs
